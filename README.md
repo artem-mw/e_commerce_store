@@ -8,8 +8,6 @@
 
 <h3>A robust, production-ready full-stack e-commerce store built with modular architecture and modern development practices.</h3>
 
-**Link to deployed live production: https://shopper-genie.duckdns.org/**
-
 ![TypeScript](https://img.shields.io/badge/TypeScript-blue?style=for-the-badge&logo=typescript&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-yellow?style=for-the-badge&logo=javascript&logoColor=white)
 
@@ -34,6 +32,12 @@
 ![Google_Cloud(GKE)](https://img.shields.io/badge/Google_Cloud(GKE)-blue?style=for-the-badge&logo=google-cloud&color=red)
 
 </div>
+
+**Link to a deployed live demo: https://shopper-genie.duckdns.org/**
+
+> You can use the pre-configured administrator account on the live demo to access the admin dashboard:
+> - **Email:** `admin@admin.com`
+> - **Password:** `123456`
 
 ---
 
@@ -352,7 +356,7 @@ Shared UI (atomic, reusable primitives)
 ---
 
 <a id="implementation-details"></a>
-### Implementation Details (Deep dives)
+## Implementation Details (Deep dives)
 
 <a id="implementation-details-data-model-overview"></a>
 ### Data Model Overview
