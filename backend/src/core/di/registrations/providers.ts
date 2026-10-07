@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import {Redis} from "ioredis";
+import {Redis, RedisOptions} from "ioredis";
 import {MailtrapClient} from "mailtrap";
 import nodemailer from "nodemailer";
 import Stripe from "stripe";
@@ -43,16 +43,23 @@ const registerProviders = (container: Container): void => {
 
     // CACHE
     //=======================
-    const redisClient = new Redis(
-        config.infrastructure.providers.cache.redis.url,
-        {
-            lazyConnect: true,
-            maxRetriesPerRequest: 1,
-            retryStrategy(times: number): number | null {
-                if (times > 3) return null;
-                return Math.min(times * 100, 3000);
-            }
+    const redisUrl = config.infrastructure.providers.cache.redis.url;
+
+    const redisOptions: RedisOptions = {
+        lazyConnect: true,
+        maxRetriesPerRequest: 1,
+        ...(redisUrl.startsWith("rediss://")) && {
+            tls: { rejectUnauthorized: false }
+        },
+        retryStrategy(times: number): number | null {
+            if (times > 3) return null;
+            return Math.min(times * 100, 3000);
         }
+    };
+
+    const redisClient = new Redis(
+        redisUrl,
+        redisOptions
     );
 
     const cacheType = config.infrastructure.providers.cache.type;

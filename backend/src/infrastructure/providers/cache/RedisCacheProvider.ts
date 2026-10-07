@@ -4,17 +4,17 @@ import {getErrorMessage} from "../../../utils/error.js";
 
 const enum EventType {
     CONNECT = "connect",
+    READY = "ready",
     ERROR = "error",
 }
 
 const enum StatusType {
     WAIT = "wait",
     CLOSE = "close",
+    END = "end",
 }
 
 export class RedisCacheProvider extends ICacheProvider {
-    private isConnected: boolean = false;
-
     constructor(private readonly client: Redis) {
         super();
         this.setupEvents();
@@ -22,12 +22,14 @@ export class RedisCacheProvider extends ICacheProvider {
 
     private setupEvents(): void {
         this.client.on(EventType.CONNECT, () => {
-            this.isConnected = true;
             console.log("[Redis] Connected.");
         });
 
+        this.client.on(EventType.READY, () => {
+            console.log("[Redis] Ready to process commands.");
+        });
+
         this.client.on(EventType.ERROR, (err) => {
-            this.isConnected = false;
             console.error(`[Redis] Error: ${err.message}`);
         });
     }
@@ -39,40 +41,45 @@ export class RedisCacheProvider extends ICacheProvider {
     }
 
     override async disconnect(): Promise<void> {
-        if (this.client) {
+        if (this.client.status !== StatusType.END) {
             await this.client.quit();
             console.log("[Redis] Disconnected.");
         }
     }
 
     override async get<T = unknown>(key: string): Promise<T | null> {
-        if (!this.isConnected) return null;
-
-        const data = await this.client.get(key);
-        if (!data) return null;
-
         try {
+            const data = await this.client.get(key);
+            if (!data) return null;
+
             return JSON.parse(data) as T;
         } catch (error: unknown) {
-            console.warn(`[Redis] Failed to parse JSON for key "${key}":`, getErrorMessage(error));
-            return data as unknown as T;
+            console.warn(`[Redis] GET failed for key "${key}":`, getErrorMessage(error));
+            return null;
         }
     }
 
     override async set(key: string, value: any, ttl?: number): Promise<void> {
-        if (!this.isConnected) return;
-
-        const data = JSON.stringify(value);
-        if (ttl) {
-            await this.client.set(key, data, "EX", ttl);
+        try {
+            const data = JSON.stringify(value);
+            if (ttl) {
+                await this.client.set(key, data, "EX", ttl);
+            }
+            else {
+                await this.client.set(key, data);
+            }
         }
-        else {
-            await this.client.set(key, data);
+        catch (error: unknown) {
+            console.error(`[Redis] SET failed for key "${key}":`, getErrorMessage(error));
         }
     }
 
     override async delete(key: string): Promise<void> {
-        if (!this.isConnected) return;
-        await this.client.del(key);
+        try {
+            await this.client.del(key);
+        }
+        catch (error: unknown) {
+            console.error(`[Redis DEL failed for key "${key}":]`, getErrorMessage(error));
+        }
     }
 }

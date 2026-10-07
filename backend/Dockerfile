@@ -15,7 +15,7 @@ COPY . .
 RUN npm run build
 
 FROM base AS production
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 COPY --from=builder /app/dist ./dist
 COPY src/templates ./src/templates
 EXPOSE 3001
