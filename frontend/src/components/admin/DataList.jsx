@@ -26,7 +26,10 @@ const DataList = ({
 				: (
 					<>
 						<Table columns={columns} data={data} rowKey={rowKey} />
-						<Pagination page={pagination.page} pages={pagination.pages} onChange={onPageChange} />
+
+						{pagination &&
+							<Pagination page={pagination.page} pages={pagination.pages} onChange={onPageChange} />
+						}
 					</>
 				)}
 		</Card>

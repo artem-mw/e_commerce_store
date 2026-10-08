@@ -56,13 +56,6 @@ const OrderDetailsPage = () => {
 			{/* Header */}
 			<div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
 				<div>
-					<Link
-						to={user?.role === USER_ROLES.ADMIN ? "/admin-dashboard?tab=orders" : "/profile?tab=my_orders"}
-						className="text-sm text-emerald-500 hover:text-emerald-400 mb-2 inline-block"
-					>
-						&larr; Back to Orders
-					</Link>
-
 					<h1 className="text-3xl font-bold text-white flex items-center gap-3">
 						Order <span className="text-gray-500 text-2xl">#{currentOrder.orderNumber}</span>
 					</h1>
