@@ -65,7 +65,6 @@ export class AuthCookieManager {
 	}
 
 	setAccessToken(res: Response, accessToken: string): void {
-		console.log(this.getCookieOptions(this.accessTokenMaxAge));
 		res.cookie(CookieTokenType.ACCESS_TOKEN, accessToken, this.getCookieOptions(this.accessTokenMaxAge));
 	}
 
