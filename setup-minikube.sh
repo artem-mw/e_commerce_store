@@ -15,6 +15,13 @@ if ! eval "$(minikube docker-env)"; then
 fi
 
 FRONTEND_ENV="./frontend/.env"
+
+APP_NAME=$(grep VITE_APP_NAME $FRONTEND_ENV | cut -d '=' -f2 | tr -d '"')
+if [ -z "$APP_NAME" ]; then
+    echo "Error: VITE_APP_NAME not found in $FRONTEND_ENV"
+    exit 1
+fi
+
 STRIPE_KEY=$(grep VITE_STRIPE_PUBLISHABLE_KEY $FRONTEND_ENV | cut -d '=' -f2 | tr -d '"')
 if [ -z "$STRIPE_KEY" ]; then
     echo "Error: VITE_STRIPE_PUBLISHABLE_KEY not found in $FRONTEND_ENV"
@@ -30,7 +37,7 @@ docker build -t e-commerce-backend:latest --target production ./backend
 
 echo "Building Frontend Image..."
 docker build -t e-commerce-frontend:latest \
-  --build-arg VITE_APP_NAME="E-Commerce" \
+  --build-arg VITE_APP_NAME="$APP_NAME" \
   --build-arg VITE_APP_API_URL="$API_URL" \
   --build-arg VITE_STRIPE_PUBLISHABLE_KEY="$STRIPE_KEY" \
   ./frontend
