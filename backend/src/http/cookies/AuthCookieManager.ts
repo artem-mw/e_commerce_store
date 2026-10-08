@@ -9,6 +9,7 @@ interface CookieOptions {
 	sameSite: SameSiteCookieOption;
 	maxAge: number;
 	path: string;
+	partitioned: boolean;
 }
 
 export class AuthCookieManager {
@@ -45,7 +46,8 @@ export class AuthCookieManager {
 			secure: this.forceDisableSecureCookies ? false : this.isProduction,
 			sameSite: this.sameSite,
 			maxAge: maxAge,
-			path: "/"
+			path: "/",
+			partitioned: this.isProduction && !this.forceDisableSecureCookies,
 		}
 	}
 
@@ -57,11 +59,13 @@ export class AuthCookieManager {
 			httpOnly: true,
 			secure: this.forceDisableSecureCookies ? false : this.isProduction,
 			sameSite: this.sameSite,
-			path: "/"
+			path: "/",
+			partitioned: this.isProduction && !this.forceDisableSecureCookies
 		};
 	}
 
 	setAccessToken(res: Response, accessToken: string): void {
+		console.log(this.getCookieOptions(this.accessTokenMaxAge));
 		res.cookie(CookieTokenType.ACCESS_TOKEN, accessToken, this.getCookieOptions(this.accessTokenMaxAge));
 	}
 
