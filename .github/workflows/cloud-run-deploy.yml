@@ -3,6 +3,8 @@ name: Build and Deploy Backend to Cloud Run
 on:
   push:
     branches: ["main"]
+    paths:
+      - "backend/**"
 
 env:
   PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
