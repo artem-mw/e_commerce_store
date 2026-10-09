@@ -9,16 +9,11 @@ import {AuthRoutes} from "../routes/AuthRoutes.jsx";
 import {AdminRoutes} from "../routes/AdminRoutes.jsx";
 import {ProtectedRoutes} from "../routes/ProtectedRoutes.jsx";
 
-import LoadingSpinner from "../components/ui/LoadingSpinner.jsx";
 import EmailVerificationPage from "../pages/auth/EmailVerificationPage.jsx";
 
 const AppRouter = () => {
-	const { user, checkingAuth, checkAuth } = useAuthStore();
+	const { user } = useAuthStore();
 	const { getCartItems } = useCartStore();
-
-	useEffect(() => {
-		void checkAuth();
-	}, [checkAuth]);
 
 	useEffect(() => {
 		if (!user) return;
@@ -26,8 +21,6 @@ const AppRouter = () => {
 	}, [user, getCartItems]);
 
     const location = useLocation();
-
-    if (checkingAuth) return <LoadingSpinner />;
 
     return (
         <div className="pt-16">
