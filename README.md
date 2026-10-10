@@ -26,14 +26,15 @@
 ![Tailwind_CSS](https://img.shields.io/badge/Tailwind_CSS-skyblue?style=for-the-badge&logo=tailwind-css&logoColor=black)
 ![Lucide_React](https://img.shields.io/badge/lucide_react-white?style=for-the-badge&color=blue)
 
+![github_actions](https://img.shields.io/badge/github_actions(CI%2FCD)-white?style=for-the-badge&logo=github-actions&logoColor=white&color=gray)
 ![Docker](https://img.shields.io/badge/docker-white?style=for-the-badge&logo=docker&logoColor=white&color=darkblue)
 ![kubernetes](https://img.shields.io/badge/kubernetes-white?style=for-the-badge&logo=kubernetes&logoColor=white&color=blue)
-![github_actions](https://img.shields.io/badge/github_actions(CI%2FCD)-white?style=for-the-badge&logo=github-actions&logoColor=white&color=gray)
-![Google_Cloud(GKE)](https://img.shields.io/badge/Google_Cloud(GKE)-blue?style=for-the-badge&logo=google-cloud&color=red)
+![Google_Cloud(GKE)](https://img.shields.io/badge/Google_Cloud(GKE/Cloud_Run)-blue?style=for-the-badge&logo=google-cloud&color=red)
+![Vercel](https://img.shields.io/badge/Vercel-black?style=for-the-badge&logo=vercel&logoColor=white)
 
 </div>
 
-**Link to a deployed live demo: https://shopper-genie.duckdns.org/**
+**Link to a deployed live demo: https://shopper-genie.vercel.app/**
 
 > You can use the pre-configured administrator account on the live demo to access the admin dashboard:
 > - **Email:** `admin@admin.com`
@@ -76,9 +77,8 @@
   * [Local Development (Docker Compose + Frontend Dev Server)](#getting-started-local-development)
   * [Local Production (Minikube + Kustomize)](#getting-started-local-production)
 * [Deployment](#deployment)
-  * [Production Environment](#deployment-production-environment)
-  * [Deployment Pipeline](#deployment-deployment-pipeline)
-  * [Traffic & Routing](#deployment-traffic-and-routing)
+  * [Current Production Deployment](#deployment-current-production)
+  * [Legacy Production](#deployment-legacy-production)
 * [License](#license)
 
 ---
@@ -124,14 +124,14 @@ This repository hosts a production-ready, full-stack E-Commerce store meticulous
 
 <a id="tech-stack-deployment-and-infrastructure"></a>
 ### Deployment & Infrastructure
-| Layer             | Technology                       |
-|-------------------|----------------------------------|
-| Containerization  | Docker                           |
-| Orchestration     | Minikube(local), GKE(production) |
-| Cloud Provider    | Google Cloud Platform (GKE)      |
-| CI/CD             | GitHub Actions                   |
-| Local Setup       | Docker Compose + Shell Script    |
-| Domain            | DuckDNS                          |
+| Layer            | Technology                                                                                                         |
+|------------------|--------------------------------------------------------------------------------------------------------------------|
+| Frontend Hosting | Vercel                                                                                                             |
+| Backend Hosting  | Google Cloud Run                                                                                                   |
+| Containerization | Docker (Multi-stage builds, Artifact Registry)                                                                     |
+| CI/CD            | GitHub Actions (Automated Docker build & deploy to Cloud Run + Vercel Git Integration)                             |
+| Local Setup      | Dev (Docker Compose), Prod-like (Shell Script + Minikube)                                                          |
+| Historical       | Legacy deployment: Google Kubernetes Engine (GKE). Manifests retained in `k8s/` + GitHub workflow `gke.deploy.yml` |
 
 ---
 
@@ -529,11 +529,31 @@ Access after deployment:
 <a id="deployment"></a>
 ## Deployment
 
-<a id="deployment-production-environment"></a>
-### Production Environment
-**Live Instance**: https://shopper-genie.duckdns.org/
+---
 
-**Infrastructure**:
+<a id="deployment-current-production"></a>
+### Current Production Deployment (Vercel + Google Cloud Run)
+
+#### Infrastructure
+- **Frontend Hosting**: Deployed on **Vercel** with global Edge CDN, managed TLS, and SPA route rewriting (`vercel.json`).
+- **Backend Hosting**: Deployed as a serverless containerized service on **Google Cloud Run** connected to **Google Artifact Registry**.
+
+#### Deployment Pipeline
+1. **Frontend**:
+    - Automated via **Vercel Git Integration**.
+    - Triggered on push to `main`.
+    - Utilizes `Ignored Build Step` (`[ "$VERCEL_GIT_COMMIT_REF" != "main" ] || git diff --quiet HEAD^ HEAD ./`) to skip builds when changes aren't affecting frontend files.
+2. **Backend**:
+    - Automated via **GitHub Actions** (`.github/workflows/cloud-run-deploy.yml`).
+    - Filtered by `paths: - "backend/**"` to ensure deployments occur strictly upon backend code updates.
+    - Builds the production Docker image, pushes to Google Artifact Registry, and triggers a deployment to Cloud Run.
+
+<a id="deployment-legacy-production"></a>
+### Legacy Production (Google Kubernetes Engine)
+
+> **Note:** The manifests in `k8s/` and the workflow `.github/workflows/gke.deploy.yml` are retained in the codebase as a demonstration of production-grade Kubernetes orchestration and deployment experience.
+
+#### Infrastructure
 - Containerized with Docker multi-stage builds
 - Orchestrated on Google Kubernetes Engine (GKE)
 - CI/CD pipeline via GitHub Actions
@@ -541,20 +561,14 @@ Access after deployment:
 
 Infrastructure manifests live in `k8s/` directory; CI/CD pipelines in `.github/workflows/`.
 
----
-
-<a id="deployment-deployment-pipeline"></a>
-### Deployment Pipeline
+#### Deployment Pipeline
 1. Code push to main branch triggers GitHub Actions workflow
 2. Backend/Frontend images built with production targets
 3. Images pushed to Google Container Registry
 4. Kustomize applies overlays to GKE cluster
 5. Rolling deployment with health checks
 
----
-
-<a id="deployment-traffic-and-routing"></a>
-### Traffic & Routing
+#### Traffic & Routing
 Production uses GKE-managed Ingress with:
 
 - **Static external IP** — Persistent load balancer address
