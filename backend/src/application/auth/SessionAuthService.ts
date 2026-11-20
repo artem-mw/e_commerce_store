@@ -72,16 +72,15 @@ export class SessionAuthService {
 
 		const { userId } = decoded;
 
-		const [_, storedToken] = await Promise.all([
-			this.userService.getByIdOrFail(userId),
-			this.authCacheRepository.getRefreshToken(userId)
-		]);
+		const storedToken = await this.authCacheRepository.getRefreshToken(userId);
 
 		// 1. Reuse detection and invalidation
 		if (!storedToken || storedToken !== refreshToken) {
 			await this.authCacheRepository.invalidateAllSessions(userId);
 			throw new InvalidTokenError("Refresh token not found or revoked (Possible session hijacking)");
 		}
+
+		await this.userService.getByIdOrFail(userId)
 
 		// 2. Token rotation
 		const tokens = this.jwtService.generateTokens(userId);
